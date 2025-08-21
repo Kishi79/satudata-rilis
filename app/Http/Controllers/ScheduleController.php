@@ -9,7 +9,7 @@ use App\Models\Schedule;
 
 class ScheduleController extends Controller
 {
-  public function __construct(){ $this->middleware('role:Admin|Kontributor'); }
+  // public function __construct(){ $this->middleware('role:Admin|Kontributor'); }
 
   public function index(Request $r){
     $opds = Opd::orderBy('name')->get();
