@@ -34,13 +34,13 @@
         {{-- Switch Kalender/Tabel --}}
         <div class="flex items-center gap-2 mb-3">
             <button type="button" class="px-4 py-2 border rounded bg-gray-200">Kalender</button>
-            <button type="button" class="px-4 py-2 border rounded bg-black text-black">Tabel</button>
+            <button type="button" class="px-4 py-2 border rounded bg-gray-500 text-white">Tabel</button>
 
             {{-- Tombol tambah hanya muncul jika login --}}
             @auth
                 @role('Admin')
                     <a href="{{ route('jadwal.create') }}" 
-                       class="ml-auto bg-blue-600 text-black px-4 py-2 rounded">
+                       class="ml-auto bg-blue-600 text-white px-4 py-2 rounded">
                         + Tambah Jadwal Rilis
                     </a>
                 @endrole
