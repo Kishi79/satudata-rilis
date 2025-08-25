@@ -11,9 +11,10 @@ Route::get('/jadwal-rilis', [SchedulePublicController::class, 'index'])
   ->name('jadwal.public');
 
 Route::get('/dashboard', function () {
-  // misalnya langsung redirect ke jadwal publik
-  return redirect()->route('jadwal.public');
-})->middleware(['auth'])->name('dashboard');
+    return view('dashboard');
+})->name('dashboard');
+
+
 
 
 // area login untuk CRUD
