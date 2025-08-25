@@ -1,59 +1,91 @@
 <x-app-layout>
- <div class="max-w-3xl mx-auto p-6">
-  <h1 class="text-xl font-semibold mb-4">{{ isset($schedule)?'Edit':'Tambah' }} Jadwal</h1>
-  <form method="post" action="{{ isset($schedule)?route('jadwal.update',$schedule):route('jadwal.store') }}">
-    @csrf @if(isset($schedule)) @method('PUT') @endif
-    <label class="block mb-2 text-sm">Dataset (opsional)</label>
-    <select name="dataset_id" class="w-full border rounded px-3 py-2 mb-3">
-      <option value="">-- pilih --</option>
-      @foreach($datasets as $d)
-        <option value="{{ $d->id }}" @selected(old('dataset_id',$schedule->dataset_id??'')==$d->id)>
-          {{ $d->judul }} ({{ $d->opd->name }})
-        </option>
-      @endforeach
-    </select>
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-xl font-semibold mb-4">
+      {{ isset($schedule) ? 'Edit' : 'Tambah' }} Jadwal Rilis Dataset
+    </h1>
 
-    <label class="block mb-2 text-sm">Judul Dataset (wajib)</label>
-    <input name="judul_dataset" class="w-full border rounded px-3 py-2 mb-3"
-           value="{{ old('judul_dataset',$schedule->judul_dataset??'') }}"/>
+    {{-- Form Simpan --}}
+    <form method="POST"
+      action="{{ isset($schedule) 
+                ? route('admin.jadwal.update', ['schedule' => $schedule->id]) 
+                : route('admin.jadwal.store') }}">
+      @csrf
+      @if(isset($schedule))
+        @method('PUT')
+      @endif
 
-    <label class="block mb-2 text-sm">OPD</label>
-    <select name="opd_id" class="w-full border rounded px-3 py-2 mb-3">
-      @foreach($opds as $o)
-        <option value="{{ $o->id }}" @selected(old('opd_id',$schedule->opd_id??'')==$o->id)>{{ $o->name }}</option>
-      @endforeach
-    </select>
+      {{-- Judul Dataset --}}
+      <label class="block mb-2 text-sm font-medium">
+        Judul Dataset <span class="text-red-500">*</span>
+      </label>
+      <input name="judul_dataset" class="w-full border rounded px-3 py-2 mb-4"
+        value="{{ old('judul_dataset', $schedule->judul_dataset ?? '') }}" required />
 
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label class="block mb-2 text-sm">Tanggal Rilis</label>
-        <input type="date" name="release_date" class="w-full border rounded px-3 py-2"
-               value="{{ old('release_date', isset($schedule)?$schedule->release_date->format('Y-m-d'):'') }}">
+      {{-- Periode Waktu --}}
+      <label class="block mb-2 text-sm font-medium">Periode Waktu</label>
+      <input type="text" name="periode_waktu" class="w-full border rounded px-3 py-2 mb-4"
+        placeholder="Contoh: 2023 / Januari - Maret"
+        value="{{ old('periode_waktu', $schedule->periode_waktu ?? '') }}" />
+
+      {{-- OPD --}}
+      <label class="block mb-2 text-sm font-medium">OPD</label>
+      <select name="opd_id" class="w-full border rounded px-3 py-2 mb-4">
+        @foreach($opds as $o)
+          <option value="{{ $o->id }}" 
+            @selected(old('opd_id', $schedule->opd_id ?? '') == $o->id)>
+            {{ $o->name }}
+          </option>
+        @endforeach
+      </select>
+
+      {{-- Jadwal Rilis + Status --}}
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block mb-2 text-sm font-medium">Jadwal Rilis</label>
+          <input type="date" name="release_date" class="w-full border rounded px-3 py-2"
+            value="{{ old('release_date', isset($schedule) ? $schedule->release_date->format('Y-m-d') : '') }}">
+        </div>
+        <div>
+          <label class="block mb-2 text-sm font-medium">Status Rilis</label>
+          <select name="status" class="w-full border rounded px-3 py-2">
+            @foreach(['akan_dirilis','tertunda','sudah_dirilis'] as $s)
+              <option value="{{ $s }}" 
+                @selected(old('status', $schedule->status ?? 'akan_dirilis') == $s)>
+                {{ str($s)->replace('_',' ')->title() }}
+              </option>
+            @endforeach
+          </select>
+        </div>
       </div>
-      <div>
-        <label class="block mb-2 text-sm">Status</label>
-        <select name="status" class="w-full border rounded px-3 py-2">
-          @foreach(['akan_dirilis','tertunda','sudah_dirilis'] as $s)
-            <option value="{{ $s }}" @selected(old('status',$schedule->status??'akan_dirilis')==$s)>{{ str($s)->replace('_',' ')->title() }}</option>
-          @endforeach
-        </select>
+
+      {{-- Catatan --}}
+      <label class="block mt-4 mb-2 text-sm font-medium">Catatan</label>
+      <textarea name="catatan" class="w-full border rounded px-3 py-2">
+        {{ old('catatan', $schedule->catatan ?? '') }}
+      </textarea>
+
+      {{-- Tombol Simpan --}}
+      <div class="mt-6 flex gap-2">
+        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">
+          Simpan
+        </button>
       </div>
-    </div>
+    </form>
 
-    <label class="block mt-3 mb-2 text-sm">Catatan</label>
-    <textarea name="catatan" class="w-full border rounded px-3 py-2">{{ old('catatan',$schedule->catatan??'') }}</textarea>
+    {{-- Form Hapus dipisah --}}
+    @isset($schedule)
+    @role('Admin')
+      <form method="POST" 
+        action="{{ route('admin.jadwal.destroy', ['schedule' => $schedule->id]) }}"
+        class="mt-3" onsubmit="return confirm('Yakin hapus jadwal ini?')">
+        @csrf
+        @method('DELETE')
+        <button class="px-4 py-2 bg-red-600 text-white rounded">
+          Hapus
+        </button>
+      </form>
+    @endrole
+    @endisset
 
-    <div class="mt-4 flex gap-2">
-      <button class="px-4 py-2 bg-indigo-600 text-white rounded">Simpan</button>
-      @isset($schedule)
-        @role('Admin')
-          <form method="post" action="{{ route('jadwal.destroy',$schedule) }}" onsubmit="return confirm('Hapus?')">
-            @csrf @method('DELETE')
-            <button class="px-4 py-2 bg-red-600 text-white rounded">Hapus</button>
-          </form>
-        @endrole
-      @endisset
-    </div>
-  </form>
- </div>
+  </div>
 </x-app-layout>

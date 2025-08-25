@@ -8,25 +8,25 @@
 
         {{-- Filter --}}
         <form method="get" class="grid md:grid-cols-3 gap-3 mb-4">
-            <input type="text" name="q" value="{{ request('q') }}" 
-                   placeholder="Cari Judul Dataset..."
-                   class="border rounded px-3 py-2 w-full">
+            <input type="text" name="q" value="{{ request('q') }}"
+                placeholder="Cari Judul Dataset..."
+                class="border rounded px-3 py-2 w-full">
 
             <select name="opd" class="border rounded px-3 py-2 w-full">
                 <option value="">Pilih OPD</option>
                 @foreach($opds as $o)
-                    <option value="{{ $o->id }}" @selected(request('opd')==$o->id)>
-                        {{ $o->name }}
-                    </option>
+                <option value="{{ $o->id }}" @selected(request('opd')==$o->id)>
+                    {{ $o->name }}
+                </option>
                 @endforeach
             </select>
 
             <select name="group" class="border rounded px-3 py-2 w-full">
                 <option value="">Pilih sektoral</option>
                 @foreach($groups as $g)
-                    <option value="{{ $g->id }}" @selected(request('group')==$g->id)>
-                        {{ $g->name }}
-                    </option>
+                <option value="{{ $g->id }}" @selected(request('group')==$g->id)>
+                    {{ $g->name }}
+                </option>
                 @endforeach
             </select>
         </form>
@@ -38,12 +38,13 @@
 
             {{-- Tombol tambah hanya muncul jika login --}}
             @auth
-                @role('Admin')
-                    <a href="{{ route('jadwal.create') }}" 
-                       class="ml-auto bg-blue-600 text-white px-4 py-2 rounded">
-                        + Tambah Jadwal Rilis
-                    </a>
-                @endrole
+            @role('Admin')
+            <a href="{{ route('admin.jadwal.create') }}"
+                class="ml-auto bg-blue-600 text-white px-4 py-2 rounded">
+                + Tambah Jadwal Rilis
+            </a>
+
+            @endrole
             @endauth
         </div>
 
@@ -58,41 +59,61 @@
                         <th class="px-3 py-2 text-center">OPD</th>
                         <th class="px-3 py-2 text-center">Jadwal Rilis</th>
                         <th class="px-3 py-2 text-center">Status Rilis</th>
+                        @auth
+                        @role('Admin')
+                        <th class="px-3 py-2 text-center">Aksi</th>
+                        @endrole
+                        @endauth
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($q as $i => $row)
-                        <tr class="border-t">
-                            <td class="px-3 py-2">{{ $q->firstItem() + $i }}</td>
-                            <td class="px-3 py-2">{{ $row->judul_dataset }}</td>
-                            <td class="px-3 py-2 text-center">
-                                {{ $row->dataset->priode_waktu ?? '-' }}
-                            </td>
-                            <td class="px-3 py-2 text-center">
-                                {{ $row->opd->name ?? '-' }}
-                            </td>
-                            <td class="px-3 py-2 text-center">
-                                {{ $row->release_date?->format('d-m-Y') ?? '-' }}
-                            </td>
-                            <td class="px-3 py-2 text-center">
-                                @php
-                                    $map = [
-                                        'akan_dirilis' => 'bg-blue-100 text-blue-800',
-                                        'tertunda' => 'bg-red-100 text-red-800',
-                                        'sudah_dirilis' => 'bg-green-100 text-green-800'
-                                    ];
-                                @endphp
-                                <span class="px-2 py-1 rounded {{ $map[$row->status] ?? 'bg-gray-100' }}">
-                                    {{ str($row->status)->replace('_',' ')->title() }}
-                                </span>
-                            </td>
-                        </tr>
+                    <tr class="border-t">
+                        <td class="px-3 py-2">{{ $q->firstItem() + $i }}</td>
+                        <td class="px-3 py-2">{{ $row->judul_dataset }}</td>
+                        <td class="px-3 py-2 text-center">{{ $row->periode_waktu ?? '-' }}</td>
+                        <td class="px-3 py-2 text-center">{{ $row->opd->name ?? '-' }}</td>
+                        <td class="px-3 py-2 text-center">{{ $row->release_date?->format('d-m-Y') ?? '-' }}</td>
+                        <td class="px-3 py-2 text-center">
+                            @php
+                            $map = [
+                            'akan_dirilis' => 'bg-blue-100 text-blue-800',
+                            'tertunda' => 'bg-red-100 text-red-800',
+                            'sudah_dirilis' => 'bg-green-100 text-green-800'
+                            ];
+                            @endphp
+                            <span class="px-2 py-1 rounded {{ $map[$row->status] ?? 'bg-gray-100' }}">
+                                {{ str($row->status)->replace('_',' ')->title() }}
+                            </span>
+                        </td>
+
+                        {{-- Aksi khusus Admin --}}
+                        @auth
+                        @role('Admin')
+                        <td class="px-3 py-2 text-center">
+                            <a href="{{ route('admin.jadwal.edit', $row->id) }}"
+                                class="px-3 py-1 bg-yellow-500 text-white rounded mr-1">Edit</a>
+
+                            {{-- Tombol Hapus --}}
+                            <form method="POST"
+                                action="{{ route('admin.jadwal.destroy', $row->id) }}"
+                                class="inline"
+                                onsubmit="return confirm('Yakin hapus jadwal ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button class="px-3 py-1 bg-red-600 text-white rounded">Hapus</button>
+                            </form>
+
+                        </td>
+                        @endrole
+                        @endauth
+                    </tr>
                     @empty
-                        <tr>
-                            <td colspan="6" class="px-3 py-6 text-center text-gray-500">
-                                Belum ada jadwal
-                            </td>
-                        </tr>
+                    <tr>
+                        <td colspan="7" class="px-3 py-6 text-center text-gray-500">
+                            Belum ada jadwal
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>

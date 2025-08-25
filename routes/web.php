@@ -4,30 +4,26 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\SchedulePublicController;
 
-
+// Redirect root ke jadwal publik
 Route::get('/', fn() => redirect()->route('jadwal.public'));
 
+//  Halaman publik (tanpa login)
 Route::get('/jadwal-rilis', [SchedulePublicController::class, 'index'])
-  ->name('jadwal.public');
+    ->name('jadwal.public');
 
+//  Dashboard (butuh login)
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->name('dashboard');
+})->middleware(['auth'])->name('dashboard');
 
-
-
-
-// area login untuk CRUD
-Route::middleware(['auth','role:Admin'])->group(function () {
-    Route::resource('admin/jadwal', ScheduleController::class)
-         ->parameters(['jadwal'=>'schedule'])
-         ->except(['show']);
+//  Area Admin (CRUD Jadwal)
+Route::prefix('admin')->middleware(['auth','role:Admin'])->group(function () {
+    Route::resource('jadwal', ScheduleController::class)
+        ->names('admin.jadwal')
+        ->parameters(['jadwal' => 'schedule']); 
 });
 
 
-// khusus hapus hanya admin
-Route::delete('admin/jadwal/{schedule}', [ScheduleController::class, 'destroy'])
-  ->middleware(['auth', 'role:Admin'])
-  ->name('jadwal.destroy');
 
+//  Auth routes (login, register, dll dari Breeze/Fortify)
 require __DIR__ . '/auth.php';
