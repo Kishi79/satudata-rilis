@@ -11,10 +11,10 @@ Route::get('/', fn() => redirect()->route('jadwal.public'));
 Route::get('/jadwal-rilis', [SchedulePublicController::class, 'index'])
     ->name('jadwal.public');
 
-//  Dashboard (butuh login)
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth'])->name('dashboard');
+})->name('dashboard');
+
 
 //  Area Admin (CRUD Jadwal)
 Route::prefix('admin')->middleware(['auth','role:Admin'])->group(function () {
